@@ -1,0 +1,114 @@
+buildscript {
+    repositories {
+        jcenter()
+        maven {
+            url 'https://plugins.gradle.org/m2/'
+        }
+    }
+    dependencies {
+        classpath 'com.github.maiflai:gradle-scalatest:0.14'
+        classpath 'net.researchgate:gradle-release:2.3.4'
+    }
+}
+
+// gradle 3.0 intellj fixes
+ScalaCompileOptions.metaClass.daemonServer = true
+ScalaCompileOptions.metaClass.fork = true
+ScalaCompileOptions.metaClass.useAnt = false
+ScalaCompileOptions.metaClass.useCompileDaemon = false
+
+
+allprojects {
+    group = 'com.datamountaineer'
+    version = project.version
+    description = "mqtt-server"
+
+    apply plugin: 'scala'
+    apply plugin: 'net.researchgate.release'
+
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+
+    ext {
+        scalaMajorVersion = '2.11'
+        scala = '2.11.7'
+        junit = '4.11'
+        scalaLoggingVersion = '2.1.2'
+
+        avroVersion = '1.7.7'
+        slf4jVersion = "1.7.7"
+        avro4sVersion = "1.6.2"
+        json4s = "3.5.0"
+    }
+
+    apply plugin: 'application'
+    mainClassName = "com.datamountaineer.mqtt.server.Program"
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        maven { url "http://packages.confluent.io/maven/" }
+        maven { url "http://repo.typesafe.com/typesafe/releases/" }
+        maven { url "https://repository.cloudera.com/artifactory/cloudera-repos/" }
+        maven { url "http://conjars.org/repo" }
+        maven {
+            url 'http://dl.bintray.com/andsel/maven/'
+        }
+    }
+
+    dependencies {
+        compile "org.scala-lang:scala-library:$scala"
+        compile "org.scala-lang:scala-compiler:$scala"
+        compile "com.typesafe.scala-logging:scala-logging-slf4j_$scalaMajorVersion:$scalaLoggingVersion"
+        compile("io.moquette:moquette-broker:0.8.1")
+        compile "com.sksamuel.avro4s:avro4s-core_$scalaMajorVersion:$avro4sVersion"
+        compile "com.sksamuel.avro4s:avro4s-json_$scalaMajorVersion:$avro4sVersion"
+
+        compile "org.json4s:json4s-core_$scalaMajorVersion:$json4s"
+        compile "org.json4s:json4s-jackson_$scalaMajorVersion:$json4s"
+        compile "org.apache.avro:avro:$avroVersion"
+    }
+
+    test {
+        maxParallelForks = 1
+        minHeapSize '256m'
+        maxHeapSize '2048m'
+    }
+
+    task testJar(type: Jar, dependsOn: testClasses) {
+        baseName = "test-${project.archivesBaseName}"
+        from sourceSets.test.output
+    }
+
+
+    tasks.withType(Tar) {
+        compression Compression.GZIP
+        extension = 'tgz'
+    }
+
+    task compile(dependsOn: 'compileScala')
+
+}
+
+
+
+/*
+
+project("mqtt-server") {
+    apply plugin: 'application'
+
+    ext {
+        avro4sVersion = "1.6.2"
+        json4s = "3.5.0"
+        activeMq = "5.7.0"
+    }
+
+    dependencies {
+        compile("io.moquette:moquette-broker:0.8.1")
+        compile "com.sksamuel.avro4s:avro4s-core_$scalaMajorVersion:$avro4sVersion"
+        compile "com.sksamuel.avro4s:avro4s-json_$scalaMajorVersion:$avro4sVersion"
+
+        compile "org.json4s:json4s-core_$scalaMajorVersion:$json4s"
+        compile "org.json4s:json4s-jackson_$scalaMajorVersion:$json4s"
+
+    }
+}*/
