@@ -1,15 +1,23 @@
 package com.datamountaineer.mqtt.server
 
+import java.io.{BufferedWriter, FileOutputStream, FileWriter}
 import java.nio.ByteBuffer
 
-import com.sksamuel.avro4s.RecordFormat
+import com.sksamuel.avro4s.{RecordFormat, SchemaFor}
 import io.moquette.proto.messages.{AbstractMessage, PublishMessage}
 import io.moquette.server.Server
 import io.moquette.server.config.ClasspathConfig
 
 object Program extends App {
-  val jsonTopic = "json"
-  val avroTopic = "avro"
+
+/*  val schema = SchemaFor[TemperatureMeasure]().toString(true)
+  val w = new BufferedWriter(new FileWriter("temperaturemeasure.avro"))
+  w.write(schema)
+  w.flush()
+  w.close()
+  */
+  val jsonTopic = "/mjson"
+  val avroTopic = "/mavro"
   val classPathConfig = new ClasspathConfig()
 
   val connection = "tcp://0.0.0.0:11883"
@@ -18,7 +26,6 @@ object Program extends App {
   mqttBroker.startServer(classPathConfig)
 
   println("Starting mqtt service on port 11883")
-  scala.io.StdIn.readLine()
 
   val tempatures = Seq(
     TemperatureMeasure(1, 31.1, "EMEA", System.currentTimeMillis()),
@@ -32,7 +39,8 @@ object Program extends App {
     TemperatureMeasure(104, 34.17, "AMER", System.currentTimeMillis())
   )
 
-  println("Hit Enter to start publishing messages on topic: json and avro")
+  println(s"Hit Enter to start publishing messages on topic: $jsonTopic and $avroTopic")
+  scala.io.StdIn.readLine()
 
   val recordFormat = RecordFormat[TemperatureMeasure]
   tempatures.zipWithIndex.foreach { case (t, i) =>
